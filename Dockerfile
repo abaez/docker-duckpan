@@ -2,15 +2,12 @@ FROM centos
 
 MAINTAINER [Alejandro Baez](https://twitter.com/a_baez)
 
-# Install EPEL
-#RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-
 # Dependencies
 RUN yum install -y git vim curl
 
 # Build Dev Essentials
 RUN yum install -y tar make perl-CPAN bzip2 patch gcc automake autoconf
-#RUN yum groupinstall "Development Tools"
+RUN yum install -y openssl openssl-devel
 
 # Environment
 ENV SHELL /bin/bash
@@ -24,19 +21,12 @@ ENV TARGET_PERL 5.16
 
 # Install perlbrew
 RUN cpan App::cpanminus
-RUN cpanm install Pod::Usage@1.64 --force # 1.64
+RUN cpanm install Pod::Usage --force # 1.64
 RUN cpanm install App::perlbrew
 
 # Reinstall cpanm for perlbrew
-RUN perlbrew install-cpanm
 RUN perlbrew install-patchperl
-
-
-ENV PATH /usr/local/perlbrew/perls/$TARGET_PERL/bin:$PATH
-ENV MANPATH /usr/local/perlbrew/perls/$TARGET_PERL/man
-ENV PERLBREW_MANPATH /usr/local/perlbrew/perls/$TARGET_PERL/man
-ENV PERLBREW_PATH /usr/local/perlbrew/bin:/usr/local/perlbrew/perls/$TARGET_PERL/bin
-ENV PERLBREW_PERL $TARGET_PERL
+RUN perlbrew install-cpanm
 
 # download perl version
 RUN mkdir -p /usr/local/perlbrew/dists/ /usr/local/perlbrew/build
@@ -46,8 +36,17 @@ RUN perlbrew install --as $TARGET_PERL $TARGET_PERL_FULL
 RUN rm -rf /usr/local/perlbrew/build/* \
   /usr/local/perlbrew/dists/perl-$TARGET_PERL_FULL.tar.bz2
 
-
 # Install perl target version
-#RUN perlbrew download $TARGET_PERL_FULL
+RUN perlbrew switch $TARGET_PERL
 
-#RUN cpanm -n App::DuckPAN
+ENV PATH /usr/local/perlbrew/perls/$TARGET_PERL/bin:$PATH
+ENV MANPATH /usr/local/perlbrew/perls/$TARGET_PERL/man
+ENV PERLBREW_MANPATH /usr/local/perlbrew/perls/$TARGET_PERL/man
+ENV PERLBREW_PATH /usr/local/perlbrew/bin:/usr/local/perlbrew/perls/$TARGET_PERL/bin
+ENV PERLBREW_PERL $TARGET_PERL
+
+RUN cpanm -n App::DuckPAN --force
+
+# Install ddg
+RUN duckpan DDG
+
